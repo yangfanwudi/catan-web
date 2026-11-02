@@ -5,6 +5,36 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>卡坦岛</title>
   <style>
+    /* 首屏加载层：写在最前面，4MB 单文件解析前就能看到 */
+    #fboot{
+      position:fixed;inset:0;z-index:2147483647;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;
+      background:radial-gradient(ellipse at 50% 28%,#2b1d10 0%,#140d08 68%,#0b0705 100%);
+      color:#f4e6c8;font-family:Georgia,"Songti SC","STSong",SimSun,serif;
+      transition:opacity .45s ease,visibility .45s ease;
+    }
+    #fboot.is-done{opacity:0;visibility:hidden;pointer-events:none}
+    #fboot .fboot-mark{
+      width:78px;height:86px;display:grid;place-items:center;
+      clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);
+      background:linear-gradient(155deg,#f0c875,#a66a28 70%,#744314);
+      color:#1b1108;font-size:40px;line-height:1;
+      box-shadow:0 0 0 1px rgba(255,220,150,.28);
+      animation:fboot-pulse 1.8s ease-in-out infinite;
+    }
+    #fboot .fboot-title{font-size:22px;letter-spacing:.06em;color:#f7e8c8;margin-top:4px}
+    #fboot .fboot-sub{font-size:13px;line-height:1.7;color:#bda77f;max-width:330px;margin:0}
+    #fboot .fboot-track{width:220px;height:3px;background:rgba(244,230,200,.14);border-radius:999px;overflow:hidden;margin-top:4px}
+    #fboot .fboot-track i{display:block;width:44%;height:100%;border-radius:999px;background:linear-gradient(90deg,#8f5a22,#f0c875,#8f5a22);animation:fboot-slide 1.2s ease-in-out infinite}
+    #fboot .fboot-hint{font-size:12px;letter-spacing:.08em;color:#8f7a57;margin:2px 0 0}
+    #fboot .fboot-cards{display:flex;gap:6px;margin-top:6px;opacity:.7}
+    #fboot .fboot-cards span{width:10px;height:14px;border:1px solid #8f6a3a;border-radius:2px;transform:rotate(var(--r,0deg));background:rgba(240,200,117,.08)}
+    @keyframes fboot-pulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.035)}}
+    @keyframes fboot-slide{0%{transform:translateX(-110%)}100%{transform:translateX(330%)}}
+    @media(prefers-reduced-motion:reduce){#fboot .fboot-mark,#fboot .fboot-track i{animation:none}}
+    @media(max-width:480px){#fboot .fboot-title{font-size:20px}#fboot .fboot-sub{font-size:12px;padding:0 12px}}
+  </style>
+  <style>
 /* ======================================================================
    css/style.css —— 卡坦岛 全套样式
    主题：木纹桌面打底（assets/ui/table.jpg）+ 羊皮纸面板/弹窗/战报
@@ -1184,53 +1214,131 @@ kbd {
   .setup-title { font-size: 42px; }
 }
 
-/* ==================== 联机大厅 ==================== */
-.lobby-ov { z-index: 120; }
+/* ==================== 联机大厅（全屏页面） ==================== */
+.lobby-page {
+  position: absolute; inset: 0; z-index: 60;
+  display: flex; align-items: center; justify-content: center;
+  background:
+    linear-gradient(rgba(8, 20, 34, .62), rgba(6, 16, 28, .82)),
+    var(--img-hero, none) center / cover no-repeat,
+    linear-gradient(160deg, #123049, #081624);
+  padding: 18px;
+}
+.lobby-page.hidden { display: none; }
+.lobby-wrap {
+  width: 100%; max-width: 460px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.lobby-head {
+  display: flex; align-items: center; gap: 10px;
+}
+.lobby-back {
+  flex: none; cursor: pointer;
+  padding: 7px 12px; border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, .28);
+  background: rgba(255, 255, 255, .12);
+  color: #e8f1fb; font-size: 13px; font-weight: 800;
+  transition: background .15s, transform .15s;
+}
+.lobby-back:hover { background: rgba(255, 255, 255, .22); transform: translateX(-1px); }
+.lobby-title {
+  flex: 1; text-align: center;
+  font-size: 17px; font-weight: 900; letter-spacing: 3px;
+  color: #ffe9ad; text-shadow: 0 2px 6px rgba(0, 0, 0, .5);
+}
+.lobby-head-pad { flex: none; width: 66px; }
+
+.lobby-main { display: flex; justify-content: center; }
 .lobby-card {
-  width: 380px; max-width: calc(100vw - 40px);
-  padding: 18px 20px 20px;
+  width: 100%; padding: 18px 20px 20px;
   background: linear-gradient(#fffaf0, #f6e9c8);
   border: 1px solid #d8c69a; border-radius: 16px;
   box-shadow: 0 18px 46px rgba(0, 0, 0, .45);
+  display: flex; flex-direction: column; gap: 10px;
 }
-.lobby-card .modal-title { text-align: center; margin-bottom: 10px; }
-.lobby-body { display: flex; flex-direction: column; gap: 10px; }
-.lobby-tabs { display: flex; gap: 8px; justify-content: center; margin-bottom: 2px; }
+
+/* 页签 */
+.lobby-tabs { display: flex; gap: 8px; }
 .lobby-tab {
-  flex: 1; padding: 7px 10px; border-radius: 10px; cursor: pointer;
+  flex: 1; padding: 8px 10px; border-radius: 10px; cursor: pointer;
   border: 1px solid #d8c69a; background: rgba(255, 255, 255, .55);
-  font-size: 13px; font-weight: 800; color: #7a5c2e;
+  font-size: 13.5px; font-weight: 800; color: #7a5c2e;
+  transition: background .15s, color .15s;
 }
 .lobby-tab.on { background: linear-gradient(#d99a35, #b0762a); color: #fff8e6; border-color: #a87f1a; }
-.lobby-row { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #7a5c2e; }
-.lobby-row > span { flex: none; width: 62px; }
-.lobby-row .ipt { flex: 1; }
-.lobby-chk { align-self: center; }
-.lobby-code {
-  text-align: center; font-size: 14px; color: #7a5c2e; letter-spacing: 1px;
-  padding: 8px; border-radius: 10px; background: rgba(255, 255, 255, .6); border: 1px dashed #c8a94e;
+
+/* 表单 */
+.lobby-field { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 700; color: #7a5c2e; }
+.lobby-field > span { flex: none; width: 66px; }
+.lobby-field .ipt { flex: 1; }
+.lobby-field .ipt-code {
+  letter-spacing: 8px; text-align: center; font-size: 20px; font-weight: 900;
+  text-transform: uppercase;
 }
-.lobby-code b { font-size: 24px; letter-spacing: 4px; color: #a2661c; }
+.lobby-chk { align-self: center; }
+.lobby-hint { text-align: center; font-size: 12px; color: #9a855c; line-height: 1.5; }
+.lobby-err {
+  margin-top: 2px; padding: 8px 10px; border-radius: 10px;
+  background: rgba(200, 80, 58, .10); border: 1px solid rgba(200, 80, 58, .45);
+  font-size: 12.5px; font-weight: 700; color: #a32d1c; line-height: 1.5;
+}
+
+/* 房间视图 */
+.lobby-codebox {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 12px 10px 10px; border-radius: 12px;
+  background: rgba(255, 255, 255, .62); border: 1px dashed #c8a94e;
+}
+.lobby-codelab { font-size: 12px; font-weight: 800; letter-spacing: 3px; color: #9a855c; }
+.lobby-code {
+  font-size: 40px; font-weight: 900; letter-spacing: 12px; line-height: 1.05;
+  color: #a2661c; text-indent: 12px; text-shadow: 0 2px 0 rgba(255, 255, 255, .7);
+}
+.lobby-copy { margin-top: 4px; font-size: 12.5px; padding: 5px 12px; }
+
 .lobby-seats { display: flex; flex-direction: column; gap: 6px; }
 .lobby-seat {
-  display: flex; align-items: center; gap: 8px;
-  padding: 7px 10px; border-radius: 10px;
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 11px; border-radius: 10px;
   background: rgba(255, 255, 255, .62); border: 1px solid #e0cfa4;
-  font-size: 13px; font-weight: 700; color: #5a4618;
+  font-size: 13.5px; font-weight: 700; color: #5a4618;
 }
 .lobby-seat.empty { color: #b3a077; font-weight: 600; border-style: dashed; }
+.lobby-seat .ls-color {
+  flex: none; width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid #8a5f22;
+}
 .lobby-seat .ls-no {
   width: 20px; height: 20px; border-radius: 50%; flex: none;
   display: flex; align-items: center; justify-content: center;
-  background: #8a5f22; color: #fff8e6; font-size: 11.5px; font-weight: 900;
+  background: #cbb98f; color: #fff8e6; font-size: 11.5px; font-weight: 900;
 }
-.lobby-seat.empty .ls-no { background: #cbb98f; }
 .lobby-seat .ls-name { flex: 1; }
-.lobby-seat .ls-dot { width: 8px; height: 8px; border-radius: 50%; background: #c07a6a; }
-.lobby-seat .ls-dot.on { background: #3f8f5f; }
+.lobby-seat .ls-crown { font-size: 13px; }
+.lobby-seat .ls-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #c07a6a; }
+.lobby-seat .ls-dot.on { background: #3f8f5f; box-shadow: 0 0 0 3px rgba(63, 143, 95, .18); }
+.lobby-seat.off { opacity: .62; }
+
 .lobby-tip { text-align: center; font-size: 12px; color: #9a855c; }
-.lobby-err { margin-top: 4px; text-align: center; font-size: 12.5px; font-weight: 700; color: #b03224; }
+.lobby-leave { align-self: center; font-size: 12.5px; padding: 6px 16px; }
 .lobby-card .btn-big { width: 100%; }
+
+/* 预检失败 / 检测中 */
+.lobby-checking { text-align: center; color: #7a5c2e; font-size: 14px; font-weight: 800; padding: 30px 20px; }
+.lobby-fail { text-align: center; gap: 8px; }
+.lobby-fail .lf-icon { font-size: 34px; line-height: 1; }
+.lobby-fail .lf-title { font-size: 16px; font-weight: 900; color: #a32d1c; }
+.lobby-fail .lf-text { font-size: 12.5px; color: #6b5430; line-height: 1.6; }
+.lobby-fail .lf-text.dim { color: #9a855c; }
+.lobby-fail .lf-cmd {
+  font-family: Consolas, Menlo, monospace; font-size: 13px; font-weight: 700;
+  padding: 9px 10px; border-radius: 9px;
+  background: #2a2013; color: #ffe9ad; letter-spacing: .4px;
+  user-select: all;
+}
+.lobby-fail .lf-actions { display: flex; gap: 10px; margin-top: 4px; }
+.lobby-fail .lf-actions .btn { flex: 1; }
+
 
 /* 顶栏联机状态徽标 */
 .net-chip {
@@ -1264,7 +1372,34 @@ kbd {
 </style>
 </head>
 <body>
+  <div id="fboot" role="status" aria-live="polite">
+    <div class="fboot-mark" aria-hidden="true">⬢</div>
+    <div class="fboot-title">正在铺设卡坦岛</div>
+    <p class="fboot-sub">首次打开要载入约 4MB 的美术与规则，稍等几秒。</p>
+    <div class="fboot-track" aria-hidden="true"><i></i></div>
+    <div class="fboot-cards" aria-hidden="true"><span style="--r:-14deg"></span><span style="--r:-4deg"></span><span style="--r:7deg"></span><span style="--r:16deg"></span></div>
+    <p class="fboot-hint">AI 对手正在洗牌…</p>
+  </div>
   <div id="app"></div>
+  <script>
+    (function () {
+      var boot = document.getElementById('fboot');
+      if (!boot) return;
+      var hidden = false;
+      function hide() {
+        if (hidden) return;
+        hidden = true;
+        boot.classList.add('is-done');
+        setTimeout(function () { if (boot.parentNode) boot.parentNode.removeChild(boot); }, 500);
+      }
+      if (document.readyState === 'complete') {
+        setTimeout(hide, 350);
+      } else {
+        window.addEventListener('load', function () { setTimeout(hide, 350); }, { once: true });
+      }
+      setTimeout(hide, 15000);
+    })();
+  </script>
   <script>
 /* ============================================================================
  * js/engine-core.js —— 卡坦岛引擎核心（CatanCore）
@@ -4441,6 +4576,8 @@ if (typeof module !== 'undefined' && module.exports) {
   'use strict';
 
   var BASE = '';                 // 与页面同源（服务器同时托管静态文件）
+  var TIMEOUT_MS = 8000;         // 单次请求超时，避免网络挂起时无限等待
+  var SERVER_INFO = null;        // /api/ping 返回的服务器信息（含局域网地址）
   var NET = {
     code: null,
     playerId: null,
@@ -4451,15 +4588,53 @@ if (typeof module !== 'undefined' && module.exports) {
     lastError: null
   };
 
+  // 页面不是由联机服务器提供时的统一提示（HTTP 501/404 的 HTML 错误页最常见）
+  function notServedMsg(status) {
+    return '当前页面不是由联机服务器提供的（HTTP ' + status + '）。' +
+      '请先在项目目录运行 node server/server.js，再用它打印的地址打开本页（例如 http://127.0.0.1:8080/）。';
+  }
+  function offlineMsg(detail) {
+    return '无法连接联机服务器' + (detail ? '（' + detail + '）' : '') +
+      '。请确认 node server/server.js 正在运行，并用它打印的地址打开页面。';
+  }
+
   function post(path, body) {
+    // file:// 直接打开的单文件版没有服务器可连，提前给出明确说明
+    if (typeof location !== 'undefined' && location.protocol === 'file:') {
+      return Promise.resolve({ ok: false, error: '单文件版（file://）不支持联机。请运行 node server/server.js，再用它打印的地址打开页面。' });
+    }
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, TIMEOUT_MS) : null;
     return fetch(BASE + path, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body || {})
+      body: JSON.stringify(body || {}),
+      signal: ctrl ? ctrl.signal : undefined
     }).then(function (r) {
-      return r.json().catch(function () { return { ok: false, error: '服务器返回不是 JSON' }; });
+      if (timer) clearTimeout(timer);
+      // 先看 Content-Type：非 JSON 说明对端不是联机服务器（静态服务器/其它服务）
+      var ct = '';
+      try { ct = (r.headers && r.headers.get) ? (r.headers.get('Content-Type') || '') : ''; } catch (e) { ct = ''; }
+      if (ct.toLowerCase().indexOf('json') < 0) {
+        return { ok: false, error: notServedMsg(r.status) };
+      }
+      return r.json().then(function (j) {
+        if (j && typeof j === 'object') return j;
+        return { ok: false, error: notServedMsg(r.status) };
+      }).catch(function () {
+        return { ok: false, error: notServedMsg(r.status) };
+      });
     }).catch(function (e) {
-      return { ok: false, error: '无法连接服务器（' + (e && e.message ? e.message : '网络错误') + '）' };
+      if (timer) clearTimeout(timer);
+      var aborted = e && (e.name === 'AbortError');
+      return { ok: false, error: aborted ? '连接服务器超时（8 秒）。请确认 node server/server.js 正在运行。' : offlineMsg(e && e.message ? e.message : '网络错误') };
+    });
+  }
+
+  function ping() {
+    return post('/api/ping', {}).then(function (res) {
+      if (res && res.ok) SERVER_INFO = res;
+      return res;
     });
   }
 
@@ -4534,7 +4709,7 @@ if (typeof module !== 'undefined' && module.exports) {
     return post('/api/create', { name: name, config: cfg }).then(absorb);
   }
   function join(code, name) {
-    return post('/api/join', { code: String(code).trim(), name: name }).then(absorb);
+    return post('/api/join', { code: String(code).trim().toUpperCase(), name: name }).then(absorb);
   }
   function room() {
     if (!NET.code) return Promise.resolve({ ok: false, error: '尚未加入房间' });
@@ -4560,7 +4735,9 @@ if (typeof module !== 'undefined' && module.exports) {
   NET.start = start;
   NET.state = state;
   NET.action = action;
+  NET.ping = ping;
   NET.reset = reset;
+  NET.serverInfo = function () { return SERVER_INFO; };
   NET.restoreSession = restoreSession;
   NET.clearSession = clearSession;
   NET.info = function () {
@@ -7431,45 +7608,127 @@ if (typeof module !== 'undefined' && module.exports) {
     if (dom.gameUI) dom.gameUI.classList.remove('hidden');
   }
 
-  /* ==================== 联机大厅 ==================== */
-  var lobbyEl = null;       // 大厅遮罩根节点
-  var lobbyMode = 'create'; // 'create' | 'join'
-  var lobbyRoom = null;     // 服务器回传的 room 信息
-  var onlineSeat = null;    // 联机时「我」的座位号（非空表示联机模式，屏蔽热座遮罩）
+  /* ==================== 联机大厅（全屏页面，含返回/预检/复制邀请） ==================== */
+  var lobbyEl = null;          // 大厅页面根节点
+  var lobbyMode = 'create';    // 'create' | 'join'
+  var lobbyRoom = null;        // 服务器回传的 room 信息
+  var lobbyError = '';         // 当前错误文案
+  var lobbyBusy = false;       // 请求中（按钮禁用，防连点）
+  var lobbyPreflight = 'idle'; // idle | checking | ok | fail
+  var lobbyPreflightErr = '';
+  var lobbyCodeInput = '';     // 加入页签里已输入的房间码（切页签不丢）
+  var lastSetupName = '玩家';  // 玩家上次填的名字（跨页签/跨次保留）
+  var onlineSeat = null;       // 联机时「我」的座位号
 
   function setOnlineSeat(seat) {
     onlineSeat = (typeof seat === 'number' && seat >= 0) ? seat : null;
     if (onlineSeat != null) { viewPlayer = onlineSeat; maskActive = false; if (dom.mask) dom.mask.classList.add('hidden'); }
   }
   function getOnlineSeat() { return onlineSeat; }
+  function isLobbyOpen() { return !!(lobbyEl && !lobbyEl.classList.contains('hidden')); }
 
-  function lobbyStatusText(err) {
-    return err ? '<div class="lobby-err">' + escapeHTML(err) + '</div>' : '';
+  function ensureLobbyPage() {
+    if (lobbyEl) return lobbyEl;
+    var page = el('section', 'lobby-page hidden');
+    page.id = 'uiLobby';
+    page.innerHTML =
+      '<div class="lobby-wrap">' +
+      '  <div class="lobby-head">' +
+      '    <button class="lobby-back" id="uiLobbyBack" type="button">← 返回</button>' +
+      '    <div class="lobby-title">联机对战</div>' +
+      '    <span class="lobby-head-pad"></span>' +
+      '  </div>' +
+      '  <div class="lobby-main" id="uiLobbyMain"></div>' +
+      '</div>';
+    rootEl.appendChild(page);
+    page.querySelector('#uiLobbyBack').addEventListener('click', function () {
+      closeLobby();
+      act({ type: 'netLeave' });
+      showSetup();
+    });
+    lobbyEl = page;
+    return page;
+  }
+
+  function inviteText() {
+    var N = (typeof window !== 'undefined') ? window.CatanNet : null;
+    var info = (N && N.serverInfo) ? N.serverInfo() : null;
+    var base = (typeof location !== 'undefined') ? (location.origin + '/') : '';
+    if (info && info.lanIps && info.lanIps.length) {
+      base = 'http://' + info.lanIps[0] + ':' + (info.port || 80) + '/';
+    }
+    return '卡坦岛联机：' + base + ' 房间码 ' + (lobbyRoom && lobbyRoom.code ? lobbyRoom.code : '');
+  }
+
+  function copyText(text) {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) { /* 落到兜底 */ }
+    try {
+      var ta = el('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  /* ---------------- 三种视图：预检失败 / 表单 / 房间 ---------------- */
+
+  function buildPreflightFail() {
+    var box = el('div', 'lobby-card lobby-fail');
+    box.innerHTML =
+      '<div class="lf-icon">⚠</div>' +
+      '<div class="lf-title">没有检测到联机服务器</div>' +
+      '<div class="lf-text">' + escapeHTML(lobbyPreflightErr || '无法连接服务器') + '</div>' +
+      '<div class="lf-cmd">node server/server.js</div>' +
+      '<div class="lf-text dim">在项目目录执行上面这行命令，然后用终端打印的地址（如 http://127.0.0.1:8080/）重新打开本页。</div>' +
+      '<div class="lf-actions">' +
+      '  <button class="btn btn-ghost" id="uiLobbyRetry" type="button">重试</button>' +
+      '  <button class="btn btn-primary" id="uiLobbySolo" type="button">返回单机</button>' +
+      '</div>';
+    box.querySelector('#uiLobbyRetry').addEventListener('click', function () {
+      lobbyPreflight = 'checking'; renderLobby(); act({ type: 'netPing' });
+    });
+    box.querySelector('#uiLobbySolo').addEventListener('click', function () {
+      closeLobby(); act({ type: 'netLeave' }); showSetup();
+    });
+    return box;
   }
 
   function buildLobbyForm() {
-    var wrap = el('div', 'lobby-body');
+    var wrap = el('div', 'lobby-card lobby-form');
     var tabs = el('div', 'lobby-tabs');
     ['create', 'join'].forEach(function (m) {
       var b = el('button', 'lobby-tab' + (lobbyMode === m ? ' on' : ''), m === 'create' ? '创建房间' : '加入房间');
       b.type = 'button';
-      b.addEventListener('click', function () { lobbyMode = m; renderLobby(); });
+      b.addEventListener('click', function () { if (lobbyBusy) return; lobbyMode = m; lobbyError = ''; renderLobby(); });
       tabs.appendChild(b);
     });
     wrap.appendChild(tabs);
 
-    var nameRow = el('label', 'lobby-row');
-    nameRow.innerHTML = '<span>你的名字</span>';
+    // 名字放在页签下方、表单公共区：切换页签不会丢
+    var nameRow = el('label', 'lobby-field');
+    nameRow.appendChild(el('span', null, '你的名字'));
     var nameInput = el('input', 'ipt');
     nameInput.type = 'text'; nameInput.maxLength = 12;
-    nameInput.value = (lastSetupName || '玩家');
-    nameInput.addEventListener('input', function () { lastSetupName = nameInput.value; });
+    nameInput.value = lastSetupName || '玩家';
+    nameInput.addEventListener('input', function () {
+      lastSetupName = nameInput.value;
+      if (lobbyError) { lobbyError = ''; }
+    });
     nameRow.appendChild(nameInput);
     wrap.appendChild(nameRow);
 
     if (lobbyMode === 'create') {
-      var vpRow = el('label', 'lobby-row');
-      vpRow.innerHTML = '<span>目标分</span>';
+      var vpRow = el('label', 'lobby-field');
+      vpRow.appendChild(el('span', null, '目标分'));
       var vpInput = el('input', 'ipt ipt-num');
       vpInput.type = 'number'; vpInput.min = '3'; vpInput.max = '20'; vpInput.value = '10';
       vpRow.appendChild(vpInput);
@@ -7477,115 +7736,156 @@ if (typeof module !== 'undefined' && module.exports) {
       var rbRow = el('label', 'chk lobby-chk');
       rbRow.innerHTML = '<input type="checkbox" id="uiLobbyRandom" checked><i></i>随机地图';
       wrap.appendChild(rbRow);
-      var btn = el('button', 'btn btn-primary btn-big', '创建房间');
-      btn.type = 'button';
-      btn.addEventListener('click', function () {
+
+      var go = el('button', 'btn btn-primary btn-big', lobbyBusy ? '创建中…' : '创建房间');
+      go.type = 'button';
+      go.disabled = lobbyBusy;
+      go.addEventListener('click', function () {
+        if (lobbyBusy) return;
         var rb = byId('uiLobbyRandom');
         act({ type: 'netCreate', name: nameInput.value || '房主', targetVP: parseInt(vpInput.value, 10) || 10, randomBoard: rb ? rb.checked : true });
       });
-      wrap.appendChild(btn);
+      wrap.appendChild(go);
     } else {
-      var codeRow = el('label', 'lobby-row');
-      codeRow.innerHTML = '<span>房间码</span>';
-      var codeInput = el('input', 'ipt');
-      codeInput.type = 'text'; codeInput.maxLength = 6; codeInput.placeholder = '4 位数字';
+      var codeRow = el('label', 'lobby-field');
+      codeRow.appendChild(el('span', null, '房间码'));
+      var codeInput = el('input', 'ipt ipt-code');
+      codeInput.type = 'text'; codeInput.maxLength = 4;
+      codeInput.placeholder = '4 位字母';
+      codeInput.setAttribute('autocapitalize', 'characters');
+      codeInput.value = lobbyCodeInput || '';
+      codeInput.addEventListener('input', function () {
+        var v = codeInput.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 4);
+        codeInput.value = v;
+        lobbyCodeInput = v;
+        if (lobbyError) { lobbyError = ''; }
+      });
       codeRow.appendChild(codeInput);
       wrap.appendChild(codeRow);
-      var btn2 = el('button', 'btn btn-primary btn-big', '加入房间');
-      btn2.type = 'button';
-      btn2.addEventListener('click', function () {
+
+      var go2 = el('button', 'btn btn-primary btn-big', lobbyBusy ? '加入中…' : '加入房间');
+      go2.type = 'button';
+      go2.disabled = lobbyBusy;
+      go2.addEventListener('click', function () {
+        if (lobbyBusy) return;
         act({ type: 'netJoin', code: codeInput.value, name: nameInput.value || '玩家' });
       });
-      wrap.appendChild(btn2);
+      wrap.appendChild(go2);
     }
+
+    var hint = el('div', 'lobby-hint');
+    hint.textContent = lobbyMode === 'create'
+      ? '创建后会生成 4 位房间码，把它发给朋友即可加入（同一局域网）'
+      : '输入房主给你的 4 位房间码（不分大小写）';
+    wrap.appendChild(hint);
+
+    if (lobbyError) wrap.appendChild(el('div', 'lobby-err', lobbyError));
     return wrap;
   }
 
   function buildLobbyRoom() {
-    var wrap = el('div', 'lobby-body');
+    var wrap = el('div', 'lobby-card lobby-room');
     var room = lobbyRoom || {};
-    var head = el('div', 'lobby-code');
-    head.innerHTML = '房间码 <b>' + escapeHTML(room.code || '----') + '</b>';
-    wrap.appendChild(head);
+    var colorKeys = ['red', 'blue', 'orange', 'white'];
+
+    var box = el('div', 'lobby-codebox');
+    box.innerHTML =
+      '<div class="lobby-codelab">房间码</div>' +
+      '<div class="lobby-code" id="uiLobbyCode">' + escapeHTML(room.code || '----') + '</div>';
+    var copyBtn = el('button', 'btn btn-ghost lobby-copy', '复制邀请');
+    copyBtn.type = 'button';
+    copyBtn.addEventListener('click', function () {
+      var ok = copyText(inviteText());
+      copyBtn.textContent = ok ? '已复制 ✓' : '复制失败';
+      setTimeout(function () { copyBtn.textContent = '复制邀请'; }, 1600);
+    });
+    box.appendChild(copyBtn);
+    wrap.appendChild(box);
 
     var list = el('div', 'lobby-seats');
     (room.seats || []).forEach(function (s, i) {
       var row = el('div', 'lobby-seat' + (s.online ? '' : ' off'));
-      row.innerHTML = '<span class="ls-no">' + (i + 1) + '</span>' +
-        '<span class="ls-name">' + escapeHTML(s.name) + '</span>' +
-        '<span class="ls-dot' + (s.online ? ' on' : '') + '"></span>';
+      var dot = el('i', 'ls-color');
+      dot.style.background = pc(colorKeys[i % 4]).main;
+      dot.style.borderColor = pc(colorKeys[i % 4]).dark;
+      row.appendChild(dot);
+      row.appendChild(el('span', 'ls-name', (i === room.yourSeat ? '你 · ' : '') + s.name));
+      if (i === 0) row.appendChild(el('span', 'ls-crown', '👑'));
+      row.appendChild(el('span', 'ls-dot' + (s.online ? ' on' : '')));
       list.appendChild(row);
     });
     for (var i = (room.seats || []).length; i < 4; i++) {
       var empty = el('div', 'lobby-seat empty');
-      empty.innerHTML = '<span class="ls-no">' + (i + 1) + '</span><span class="ls-name">等待加入…</span>';
+      empty.appendChild(el('span', 'ls-no', String(i + 1)));
+      empty.appendChild(el('span', 'ls-name', '等待加入…'));
       list.appendChild(empty);
     }
     wrap.appendChild(list);
 
     var tip = el('div', 'lobby-tip');
+    var n = (room.seats || []).length;
     tip.textContent = room.started ? '对局已开始' :
-      (room.host ? '把房间码告诉朋友，他们加入后你点开始' : '等待房主开始游戏…');
+      (room.host ? (n < 2 ? '至少需要 2 名玩家才能开始' : '人齐了就点开始吧') : '等待房主开始游戏…');
     wrap.appendChild(tip);
 
     if (room.host && !room.started) {
       var startBtn = el('button', 'btn btn-primary btn-big', '开始游戏');
       startBtn.type = 'button';
-      startBtn.disabled = (room.seats || []).length < 2;
-      if (!startBtn.disabled) startBtn.addEventListener('click', function () { act({ type: 'netStart' }); });
+      startBtn.disabled = n < 2 || lobbyBusy;
+      startBtn.addEventListener('click', function () { if (!lobbyBusy) act({ type: 'netStart' }); });
       wrap.appendChild(startBtn);
     }
-    var leave = el('button', 'btn btn-ghost', '离开房间');
+    var leave = el('button', 'btn btn-ghost lobby-leave', '离开房间');
     leave.type = 'button';
-    leave.addEventListener('click', function () { closeLobby(); act({ type: 'netLeave' }); });
+    leave.addEventListener('click', function () { closeLobby(); act({ type: 'netLeave' }); showSetup(); });
     wrap.appendChild(leave);
+
+    if (lobbyError) wrap.appendChild(el('div', 'lobby-err', lobbyError));
     return wrap;
   }
 
-  var lastSetupName = '玩家';
   function renderLobby() {
     if (!lobbyEl) return;
-    var card = lobbyEl.querySelector('.lobby-card');
-    if (!card) return;
-    var old = card.querySelector('.lobby-body');
-    if (old) card.removeChild(old);
-    card.appendChild(lobbyRoom ? buildLobbyRoom() : buildLobbyForm());
+    var main = lobbyEl.querySelector('#uiLobbyMain');
+    if (!main) return;
+    main.innerHTML = '';
+    if (lobbyPreflight === 'checking') {
+      main.appendChild(el('div', 'lobby-card lobby-checking', '正在检测联机服务器…'));
+      return;
+    }
+    if (lobbyPreflight === 'fail') { main.appendChild(buildPreflightFail()); return; }
+    main.appendChild(lobbyRoom ? buildLobbyRoom() : buildLobbyForm());
   }
 
   function openLobby(mode) {
-    if (lobbyEl) { renderLobby(); return; }
+    ensureLobbyPage();
     lobbyMode = mode || 'create';
-    lobbyRoom = null;
-    var ov = el('div', 'modal-overlay lobby-ov');
-    var card = el('div', 'lobby-card');
-    card.innerHTML = '<div class="modal-title">联机对战</div>';
-    ov.appendChild(card);
-    rootEl.appendChild(ov);
-    lobbyEl = ov;
+    lobbyRoom = null; lobbyError = ''; lobbyBusy = false;
+    if (dom.setupPage) dom.setupPage.classList.add('hidden');
+    if (dom.gameUI) dom.gameUI.classList.add('hidden');
+    lobbyEl.classList.remove('hidden');
+    if (lobbyPreflight !== 'ok') { lobbyPreflight = 'checking'; act({ type: 'netPing' }); }
     renderLobby();
   }
 
-  // 服务器回传的大厅信息（含报错）→ 刷新界面
+  // 服务器预检结果（App 在 netPing 回调里调用）
+  function setPreflight(ok, err) {
+    lobbyPreflight = ok ? 'ok' : 'fail';
+    lobbyPreflightErr = err || '';
+    if (lobbyEl) renderLobby();
+  }
+
   function setLobby(room, err) {
     if (!lobbyEl) openLobby();
     lobbyRoom = room || null;
+    lobbyError = err || '';
     renderLobby();
-    if (err) {
-      var card = lobbyEl.querySelector('.lobby-card');
-      if (card) {
-        var e = card.querySelector('.lobby-err');
-        if (!e) { e = el('div', 'lobby-err'); card.appendChild(e); }
-        e.textContent = err;
-      }
-    }
   }
 
-  function closeLobby() {
-    if (lobbyEl && lobbyEl.parentNode) lobbyEl.parentNode.removeChild(lobbyEl);
-    lobbyEl = null;
-    lobbyRoom = null;
+  function setLobbyBusy(b) {
+    lobbyBusy = !!b;
+    if (lobbyEl) renderLobby();
   }
-  function isLobbyOpen() { return !!lobbyEl; }
 
   // 顶栏联机状态徽标：绿色=在线，红色=断线重试中
   function setNetStatus(info) {
@@ -7596,6 +7896,14 @@ if (typeof module !== 'undefined' && module.exports) {
     chip.className = 'net-chip ' + (info.ok ? 'ok' : 'off');
     chip.textContent = info.ok ? ('联机 · 房间 ' + info.code) : ('连接中断 · 房间 ' + info.code);
     chip.title = info.ok ? '已连接服务器' : '与服务器断开，正在自动重试…';
+  }
+
+  function closeLobby() {
+    if (lobbyEl) lobbyEl.classList.add('hidden');
+    lobbyRoom = null; lobbyError = ''; lobbyBusy = false;
+    if (dom.setupPage && (!dom.gameUI || dom.gameUI.classList.contains('hidden'))) {
+      dom.setupPage.classList.remove('hidden');
+    }
   }
 
   /* ==================== 新手教程横幅 / 段位 ==================== */
@@ -7675,6 +7983,14 @@ if (typeof module !== 'undefined' && module.exports) {
   function bindGlobalKeys() {
     if (typeof document === 'undefined') return;
     document.addEventListener('keydown', function (e) {
+      // 联机大厅：Esc 直接返回（输入框内也要生效，否则表单填一半退不出去）
+      if (e.key === 'Escape' && isLobbyOpen()) {
+        e.preventDefault();
+        closeLobby();
+        act({ type: 'netLeave' });
+        showSetup();
+        return;
+      }
       var ae = document.activeElement, tag = ae ? ae.tagName : '';
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return; // 输入框内不拦截
       if (e.key === 'Escape') { // Esc 任何界面都可用：先关弹窗，再退建造模式
@@ -7750,6 +8066,8 @@ if (typeof module !== 'undefined' && module.exports) {
       setLobby: setLobby,
       closeLobby: closeLobby,
       isLobbyOpen: isLobbyOpen,
+      setPreflight: setPreflight,
+      setLobbyBusy: setLobbyBusy,
       setNetStatus: setNetStatus
     };
   }
@@ -7995,14 +8313,29 @@ if (typeof module !== 'undefined' && module.exports) {
     renderNow(events || []);
   }
 
+  // 大厅打开前先探活：区分「对端不是联机服务器」与「服务器没开」
+  function netPing() {
+    var N = netClient();
+    var ui = getUI();
+    if (!N || typeof N.ping !== 'function') {
+      if (ui && ui.setPreflight) ui.setPreflight(false, '联机模块未加载（js/net.js）');
+      return;
+    }
+    N.ping().then(function (res) {
+      if (ui && ui.setPreflight) ui.setPreflight(!!(res && res.ok), (res && res.error) || '');
+    });
+  }
+
   function netCreate(a) {
     var N = netClient();
     if (!N) { toast('联机模块未加载（js/net.js）'); return; }
     var ui = getUI();
+    if (ui && ui.setLobbyBusy) { try { ui.setLobbyBusy(true); } catch (e) { /* 忽略 */ } }
     N.create(a.name || '房主', {
       targetVP: a.targetVP || 10,
       randomBoard: a.randomBoard !== false
     }).then(function (res) {
+      if (ui && ui.setLobbyBusy) { try { ui.setLobbyBusy(false); } catch (e) { /* 忽略 */ } }
       if (!res.ok) { if (ui && ui.setLobby) ui.setLobby(null, res.error); return; }
       net.active = true; net.started = false;
       net.seat = N.info().seat;
@@ -8016,7 +8349,9 @@ if (typeof module !== 'undefined' && module.exports) {
     if (!N) { toast('联机模块未加载（js/net.js）'); return; }
     if (!a.code) { toast('请填写房间码'); return; }
     var ui = getUI();
+    if (ui && ui.setLobbyBusy) { try { ui.setLobbyBusy(true); } catch (e) { /* 忽略 */ } }
     N.join(a.code, a.name || '玩家').then(function (res) {
+      if (ui && ui.setLobbyBusy) { try { ui.setLobbyBusy(false); } catch (e) { /* 忽略 */ } }
       if (!res.ok) { if (ui && ui.setLobby) ui.setLobby(null, res.error); return; }
       net.active = true; net.started = false;
       net.seat = N.info().seat;
@@ -8571,6 +8906,9 @@ if (typeof module !== 'undefined' && module.exports) {
         return true;
       case 'skipTutorial':
         endTutorial('已跳过教程');
+        return true;
+      case 'netPing': case 'onlinePing':
+        netPing();
         return true;
       case 'netCreate': case 'onlineCreate':
         netCreate(a);
