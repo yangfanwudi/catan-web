@@ -1066,6 +1066,15 @@ kbd {
 .dc-card.max { filter: brightness(.85); }
 .dc-name { font-size: 12.5px; font-weight: 800; letter-spacing: 2px; }
 .dc-n { font-size: 14px; font-weight: 900; }
+.dc-minus {
+  position: absolute; top: -8px; right: -8px;
+  width: 24px; height: 24px; display: none; place-items: center;
+  border-radius: 50%; border: 1px solid rgba(255, 215, 106, .7);
+  background: #20160b; color: var(--gold); font: 900 16px/1 Georgia, serif;
+  cursor: pointer; z-index: 2; box-shadow: 0 2px 6px rgba(0, 0, 0, .45);
+}
+.dc-card.sel .dc-minus { display: grid; }
+.dc-minus:hover { background: #3a2812; }
 
 /* ==================== 热座遮罩 ==================== */
 .hotseat-mask {
@@ -7340,32 +7349,66 @@ if (typeof module !== 'undefined' && module.exports) {
     RES_KEYS.forEach(function (k) { selN += discardSel.cards[k] || 0; });
 
     var body = el('div', 'modal-body');
-    body.appendChild(el('div', 'modal-tip', '手牌 ' + total + ' 张超过上限 7，请弃置 <b>' + need + '</b> 张（已选 ' + selN + ' / ' + need + '）'));
+    var tip = el('div', 'modal-tip');
+    body.appendChild(tip);
     var grid = el('div', 'discard-hand');
+    var cardsDom = {};
     RES_KEYS.forEach(function (k) {
       var have = (p.resources && p.resources[k]) || 0;
       if (have <= 0) return;
-      var picked = discardSel.cards[k] || 0;
-      var c = el('button', 'dc-card' + (picked > 0 ? ' sel' : '') + (picked >= have ? ' max' : ''));
+      var c = el('button', 'dc-card');
       c.type = 'button';
       c.style.setProperty('--c1', RES[k].c1);
       c.style.setProperty('--c2', RES[k].c2);
       c.innerHTML = resIconSVG(k, 26) + '<span class="dc-name">' + RES[k].full + '</span>' +
-        '<span class="dc-n">' + (picked > 0 ? picked + ' / ' : '') + have + '</span>';
-      c.addEventListener('click', function () {
-        var cur = discardSel.cards[k] || 0;
-        var allSel = 0;
-        RES_KEYS.forEach(function (kk) { allSel += discardSel.cards[kk] || 0; });
-        if (allSel >= need && cur < have) { showToast('已达需弃张数'); return; }
-        discardSel.cards[k] = (cur + 1) % (have + 1);
-        openDiscardModal(state, pidx); // 刷新
-      });
+        '<span class="dc-n"></span><span class="dc-minus" role="button" aria-label="取消一张">−</span>';
+      var numEl = c.querySelector('.dc-n');
+      var minusEl = c.querySelector('.dc-minus');
+      cardsDom[k] = { el: c, num: numEl, minus: minusEl, have: have };
+      c.addEventListener('click', function () { add(k); });
+      minusEl.addEventListener('click', function (ev) { ev.stopPropagation(); remove(k); });
       grid.appendChild(c);
     });
     body.appendChild(grid);
     var foot = el('div', 'modal-foot');
     var ok = el('button', 'btn btn-primary', '确认弃牌');
-    ok.disabled = selN !== need;
+    ok.disabled = true;
+
+    function selCount() {
+      var n = 0;
+      RES_KEYS.forEach(function (k) { n += discardSel.cards[k] || 0; });
+      return n;
+    }
+    function update() {
+      var selN = selCount();
+      tip.innerHTML = '手牌 ' + total + ' 张超过上限 7，请弃置 <b>' + need + '</b> 张（已选 ' + selN + ' / ' + need + '）';
+      RES_KEYS.forEach(function (k) {
+        var d = cardsDom[k];
+        if (!d) return;
+        var picked = discardSel.cards[k] || 0;
+        d.el.classList.toggle('sel', picked > 0);
+        d.el.classList.toggle('max', picked >= d.have);
+        d.num.textContent = (picked > 0 ? picked + ' / ' : '') + d.have;
+        d.minus.setAttribute('aria-hidden', picked > 0 ? 'false' : 'true');
+      });
+      ok.disabled = selN !== need;
+    }
+    function add(k) {
+      var d = cardsDom[k];
+      if (!d) return;
+      var cur = discardSel.cards[k] || 0;
+      if (cur >= d.have) return;
+      if (selCount() >= need) { showToast('已达需弃张数'); return; }
+      discardSel.cards[k] = cur + 1;
+      update();
+    }
+    function remove(k) {
+      var cur = discardSel.cards[k] || 0;
+      if (cur <= 0) return;
+      discardSel.cards[k] = cur - 1;
+      update();
+    }
+    update();
     ok.addEventListener('click', function () {
       var cards = {};
       RES_KEYS.forEach(function (k) { if (discardSel.cards[k] > 0) cards[k] = discardSel.cards[k]; });
