@@ -1378,6 +1378,128 @@ kbd {
 .players-col.ultra .pp-stats { margin-top: 1px; }
 .players-col.ultra .pp-stat { font-size: 10.5px; padding: 0 5px; }
 
+/* ==================== 手机 / 窄屏适配 ==================== */
+@media (max-width: 760px), (max-width: 950px) and (max-height: 520px) {
+  body { overflow: hidden; }
+
+  /* 开局设置：卡片占满宽度，玩家行改成三行，操作按钮两列 */
+  .setup-page { padding: 10px 8px calc(10px + env(safe-area-inset-bottom)); align-items: flex-start; }
+  .setup-card { width: 100%; min-width: 0; max-width: none; padding: 16px 12px 14px; border-radius: 14px; }
+  .setup-form, .setup-players, .setup-row { min-width: 0; }
+  .setup-title { font-size: 34px; letter-spacing: 8px; text-indent: 8px; margin-top: 4px; }
+  .setup-sub { font-size: 10px; letter-spacing: 2px; margin-bottom: 10px; }
+  .rank-badge { margin: 4px auto 2px; font-size: 11px; padding: 4px 10px; }
+  .setup-row-line { gap: 7px; padding: 8px 9px; margin-bottom: 8px; }
+  .setup-row-line .fl { font-size: 12px; letter-spacing: 1px; }
+  .seg-btn { padding: 6px 9px; font-size: 12px; }
+  .ipt { font-size: 13px; padding: 6px 7px; }
+  .ipt-num { width: 58px; }
+  .chk { font-size: 12px; }
+
+  .setup-players { gap: 7px; }
+  .setup-row {
+    grid-template-columns: 26px 1fr 1fr;
+    gap: 6px; padding: 8px; border-radius: 10px;
+  }
+  .setup-row > :nth-child(1) { grid-column: 1; grid-row: 1 / span 3; align-self: start; }
+  .setup-row > :nth-child(2) { grid-column: 2 / 4; grid-row: 1; }
+  .setup-row > :nth-child(3) { grid-column: 2; grid-row: 2; }
+  .setup-row > :nth-child(4) { grid-column: 3; grid-row: 2; }
+  .setup-row > :nth-child(5) { grid-column: 2 / 4; grid-row: 3; }
+  .setup-row .ipt { width: 100%; min-width: 0; }
+  .setup-no { width: 24px; height: 24px; font-size: 12px; }
+  .setup-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+  .setup-actions .btn { padding: 10px 5px; font-size: 14px; letter-spacing: 1px; }
+  .setup-tip { font-size: 11px; line-height: 1.7; margin-top: 10px; white-space: normal; overflow-wrap: anywhere; }
+
+  /* 游戏主界面：顶栏压缩，侧栏变横向玩家条，战报隐藏 */
+  .game-ui { min-width: 0; min-height: 0; }
+  .topbar {
+    height: auto; min-height: 42px; padding: 4px 8px; gap: 4px;
+    flex-wrap: wrap; align-content: center;
+  }
+  .tb-logo, .tb-title { display: none; }
+  .tb-info { font-size: 11px; margin-left: 0; flex: 1 1 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tb-right { margin-left: auto; gap: 3px; }
+  .tb-lab { display: none; }
+  .tb-select { font-size: 11px; padding: 3px 4px; max-width: 48px; }
+  .tb-btn { padding: 4px 7px; font-size: 11px; border-radius: 6px; }
+  #uiSaveBtn, #uiLoadBtn2 { display: none; }
+
+  .hintbar { padding: 5px 8px; gap: 5px; min-height: 30px; flex-wrap: wrap; }
+  .phase-chip { font-size: 10px; padding: 2px 7px; }
+  .hint-text { font-size: 12px; line-height: 1.45; order: 3; flex: 1 0 100%; }
+  .map-chip { font-size: 10px; padding: 2px 7px; margin-left: auto; }
+
+  .game-main { flex-direction: column; min-height: 0; }
+  .players-col {
+    width: 100%; flex: none; flex-direction: row; gap: 5px;
+    padding: 5px 6px; overflow-x: auto; overflow-y: hidden;
+    max-height: 76px; scrollbar-width: none;
+  }
+  .players-col::-webkit-scrollbar { display: none; }
+  .panel-player {
+    flex: 0 0 128px; min-height: 0; padding: 5px 7px 4px;
+    border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,.25);
+  }
+  .panel-player.active::after { display: none; }
+  .pp-head { gap: 4px; }
+  .pp-dot { width: 10px; height: 10px; border-width: 1px; }
+  .pp-name { font-size: 12px; max-width: 68px; }
+  .pp-tag { font-size: 9px; padding: 0 4px; }
+  .pp-badges { display: none; }
+  .pp-mid { margin-top: 3px; gap: 4px; }
+  .pp-lab { font-size: 9px; }
+  .pp-score { font-size: 20px; }
+  .pp-hidden { font-size: 9px; padding: 0 4px; }
+  .pp-live { font-size: 9px; padding: 1px 5px; }
+  .pp-stats { gap: 2px; margin-top: 2px; flex-wrap: nowrap; overflow: hidden; }
+  .pp-stat { font-size: 9px; padding: 1px 4px; border-radius: 5px; white-space: nowrap; }
+  .log-col { display: none; }
+
+  .board-col { flex: 1 1 auto; min-height: 0; padding: 0; }
+  .board-wrap { min-height: 0; }
+
+  .actionbar {
+    flex: none; min-height: 0; padding: 5px 7px calc(5px + env(safe-area-inset-bottom));
+    gap: 5px; flex-wrap: wrap; align-items: stretch;
+  }
+  .hand-area, .dev-area { flex: 1 1 calc(50% - 3px); min-width: 0; gap: 3px; }
+  .hand-who, .dev-head { font-size: 10px; letter-spacing: 0; }
+  .hand-row, .dev-row { gap: 3px; }
+  .res-card, .dev-card { max-width: none; padding: 3px 2px; border-radius: 7px; }
+  .res-name { font-size: 10px; letter-spacing: 1px; }
+  .res-count { font-size: 15px; }
+  .dev-name { font-size: 9.5px; letter-spacing: 0; }
+  .dev-count { font-size: 12px; }
+  .dev-note { font-size: 8px; padding: 0 4px; top: -5px; right: -2px; }
+  .btn-area { flex: 1 1 100%; gap: 3px; }
+  .btns-box { gap: 4px; }
+  .ab-btn { flex: 1 1 22%; min-width: 0; padding: 5px 3px; border-radius: 8px; }
+  .ab-btn .ab-lab { font-size: 11px; letter-spacing: 1px; }
+  .ab-btn .cost { gap: 2px; }
+  .cost-it { font-size: 9px; }
+  .free-tag { font-size: 8px; padding: 0 4px; right: -3px; }
+  .keys-help, .dice-area { display: none; }
+
+  .action-cluster {
+    right: 6px; bottom: 6px; gap: 5px;
+    transform: scale(.76); transform-origin: bottom right;
+  }
+  .cluster-btn { min-width: 152px; min-height: 48px; padding: 4px 9px; gap: 7px; border-radius: 12px; }
+  .cl-ic svg { width: 24px; height: 24px; }
+  .cl-lab { font-size: 13px; }
+  .cl-key { display: none; }
+
+  .tut-card { left: 8px; right: 8px; bottom: 8px; max-width: none; }
+  .modal-shell, .ov-box, .modal-box { max-width: calc(100vw - 16px) !important; max-height: 88dvh; overflow: auto; }
+  .discard-hand { gap: 6px; }
+  .dc-card { width: 74px; padding: 8px 3px 6px; }
+  .dc-name { font-size: 11px; letter-spacing: 1px; }
+  .dc-n { font-size: 12px; }
+}
+
+
 </style>
 </head>
 <body>
